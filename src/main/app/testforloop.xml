@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="testforloopFlow">
+        <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="35" timeUnit="SECONDS"/>
+            <logger message="starting the run ...." level="INFO" doc:name="Logger"/>
+        </poll>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+(0 to 10) map [
+	counteee: $$
+]]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="payload values ... #[payload]" level="INFO" doc:name="Logger"/>
+        <foreach collection="payload" doc:name="For Each">
+            <flow-ref name="testforloopFlow1" doc:name="Flow Reference"/>
+        </foreach>
+    </flow>
+    <flow name="testforloopFlow1">
+        <logger message="value of counter ... #[flowVars.counter]" level="INFO" doc:name="Logger"/>
+        <logger message="values of dv .... #[flowVars.counter%5 == 0]" level="INFO" doc:name="Logger"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.counter == 1 || flowVars.counter%5 == 0]">
+                <logger message="entered logger when counter is divisible by 5 .. counter values ... #[flowVars.counter]" level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <logger message="entered logs where counter is not divisible by 5" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <logger message="after choice end of process ...." level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
